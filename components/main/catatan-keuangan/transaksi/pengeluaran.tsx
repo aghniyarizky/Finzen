@@ -43,11 +43,29 @@ export default function Pengeluaran({ onSuccess }: PengeluaranProps) {
     { id: "Lainnya", name: "Lainnya" },
   ];
 
+  const formatNumberInput = (value: string) => {
+    let cleanValue = value.replace(/[^0-9,]/g, "");
+    
+    const parts = cleanValue.split(",");
+    if (parts.length > 2) {
+      cleanValue = parts[0] + "," + parts.slice(1).join("");
+    }
+
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? "," + parts[1] : "";
+
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return integerPart + decimalPart;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess(false);
     setLoading(true);
+
+    const nominalBersih = nominal.replace(/\./g, "").replace(/,/g, ".");
 
     try {
       const token = localStorage.getItem("token");
@@ -63,7 +81,7 @@ export default function Pengeluaran({ onSuccess }: PengeluaranProps) {
           tipe: "pengeluaran",
           kategori: selectedCategory,
           Sumber_Dana: selectedSumberDana,
-          nominal: Number(nominal),
+          nominal: Number(nominalBersih),
           tanggal: tanggal || undefined,
         }),
       });
@@ -177,15 +195,18 @@ export default function Pengeluaran({ onSuccess }: PengeluaranProps) {
 
             <div>
               <label className="text-xs text-gray-500 font-semibold mb-1.5 block">Nominal</label>
-              <input 
-                type="text"
-                inputMode="numeric"
-                value={nominal}
-                onChange={(e) => setNominal(e.target.value.replace(/[^0-9]/g, ""))}
-                className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm px-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
-                placeholder="Masukkan Nominal"
-                required
-              />
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-sm font-semibold text-gray-500">Rp</span>
+                <input 
+                  type="text"
+                  inputMode="decimal"
+                  value={nominal}
+                  onChange={(e) => setNominal(formatNumberInput(e.target.value))}
+                  className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm pl-12 pr-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
+                  placeholder="Contoh: 50.000"
+                  required
+                />
+              </div>
             </div>
 
             <div>

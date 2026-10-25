@@ -72,7 +72,7 @@ function AuthContent() {
   const pinjamanId = id;
   const budgetingId = id;
   const targetNabungId = id;
-  const dompetId = id; // <--- Tambahan untuk dompet
+  const dompetId = id; 
 
   const getStep = (): StepType => {
     if (!rawStep) return "landing";
@@ -204,8 +204,8 @@ function AuthContent() {
 
       {step === "transaksi" && (
         <Transaksi
-          onSwitchToScan={() => setStep("scanstruk")}
-          onSwitchToAdd={() => setStep("tambahtransaksi")}
+          onSwitchToScan={() => router.push("/?mode=scanstruk")} 
+          onSwitchToAdd={() => router.push("/?mode=tambahtransaksi")}
           onSwitchToEdit={(id: number | string) =>
             router.push(`/?mode=edittransaksi&id=${id}`)
           }
@@ -304,10 +304,8 @@ function AuthContent() {
         />
       )}
 
-      {/* --- BAGIAN DOMPET YANG SUDAH DIPERBAIKI --- */}
       {step === "dompet" && (
         <Dompet 
-          // Props jika ada, misal fungsi untuk handle edit/tambah
         />
       )}
 
