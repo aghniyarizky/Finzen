@@ -211,7 +211,7 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-bold tracking-wider text-white">Email</label>
+                <label className="text-[11px] font-bold tracking-wider text-gray-800">Email</label>
                 <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gray-400 backdrop-blur-md focus-within:ring-2 focus-within:ring-[#6C63F2] focus-within:border-transparent transition-all">
                   <span className="material-icons text-gray-300 text-sm select-none">email</span>
                   <input
@@ -226,7 +226,7 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-bold tracking-wider text-white">Nama Lengkap</label>
+                <label className="text-[11px] font-bold tracking-wider text-gray-800">Nama Lengkap</label>
                 <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gray-400 backdrop-blur-md focus-within:ring-2 focus-within:ring-[#6C63F2] focus-within:border-transparent transition-all">
                   <span className="material-icons text-gray-300 text-sm select-none">badge</span>
                   <input
@@ -242,7 +242,7 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-bold tracking-wider text-white">Username</label>
+                <label className="text-[11px] font-bold tracking-wider text-gray-800">Username</label>
                 <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gray-400 backdrop-blur-md focus-within:ring-2 focus-within:ring-[#6C63F2] focus-within:border-transparent transition-all">
                   <span className="material-icons text-gray-300 text-sm select-none">person</span>
                   <input
@@ -258,7 +258,7 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-bold tracking-wider text-white">Password</label>
+                <label className="text-[11px] font-bold tracking-wider text-gray-800">Password</label>
                 <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gray-400 backdrop-blur-md focus-within:ring-2 focus-within:ring-[#6C63F2] focus-within:border-transparent transition-all">
                   <span className="material-icons text-gray-300 text-sm select-none">lock</span>
                   <input
@@ -287,7 +287,7 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-bold tracking-wider text-white">Konfirmasi Password</label>
+                <label className="text-[11px] font-bold tracking-wider text-gray-800">Konfirmasi Password</label>
                 <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gray-400 backdrop-blur-md focus-within:ring-2 focus-within:ring-[#6C63F2] focus-within:border-transparent transition-all">
                   <span className="material-icons text-gray-300 text-sm select-none">lock_reset</span>
                   <input
