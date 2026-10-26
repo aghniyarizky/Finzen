@@ -5,6 +5,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import "material-icons/iconfont/material-icons.css";
 
+import ConfirmDeleteModal from "../confirm-delete";
+import ToastSuccess from "../msg-success";
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,6 +35,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showLogoutToast, setShowLogoutToast] = useState(false);
 
   const [userData, setUserData] = useState({
     username: "",
@@ -109,9 +115,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           icon: "payments",
           href: "?mode=kelolapinjaman",
         },
-        // { name: "Budgeting", icon: "attach_money", href: "?mode=budgeting" },
+        { name: "Budgeting", icon: "attach_money", href: "?mode=budgeting" },
         { name: "Target Nabung", icon: "adjust", href: "?mode=targetnabung" },
-        { name: "Dompet", icon: "wallet", href: "?mode=dompet" },
       ],
     },
     {
@@ -120,15 +125,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       href: "?mode=financialhealth",
     },
     { name: "Kalkulator Bunga", icon: "calculate", href: "?mode=kalkulator" },
-    {
-      name: "Teman Pintar",
-      icon: "chat_bubble",
-      subItems: [
-        { name: "Zen AI", icon: "chat_bubble", href: "#" },
-        { name: "Cari Aman", icon: "shield", href: "?mode=cariaman" },
-      ],
-    },
-    { name: "Settings", icon: "settings", href: "#" },
+    { name: "Cari Aman", icon: "shield", href: "?mode=cariaman" },
   ];
 
   useEffect(() => {
@@ -158,9 +155,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     setOpenSubmenu((prev) => (prev === name ? null : name));
   };
 
+  // Fungsi Konfirmasi Logout (Buka Modal)
+  const confirmLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  // Fungsi Eksekusi Logout
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
+    setShowLogoutModal(false);
 
     const token = localStorage.getItem("token");
 
@@ -179,10 +183,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      
       setIsLoggingOut(false);
       onClose();
-      router.push("/?mode=login");
-      router.refresh();
+      
+      setShowLogoutToast(true);
+
+      setTimeout(() => {
+        router.push("/?mode=login");
+        router.refresh();
+      }, 1500);
     }
   };
 
@@ -356,7 +366,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <div className="pt-4 border-t border-gray-400 mt-2 shrink-0">
               <button
-                onClick={handleLogout}
+                onClick={confirmLogout}
                 disabled={isLoggingOut}
                 className="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-500/10 transition-colors w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -371,6 +381,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </aside>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        loading={isLoggingOut}
+        title="Logout Akun?"
+        description="Apakah kamu yakin ingin keluar dari akun ini? Kamu harus login kembali untuk mengakses data keuanganmu."
+      />
+
+      <ToastSuccess
+        isVisible={showLogoutToast}
+        onClose={() => setShowLogoutToast(false)}
+        title="Berhasil Logout"
+        message="Kamu telah keluar dari akun. Sampai jumpa kembali!"
+        autoCloseDuration={1500}
+      />
     </>
   );
 }

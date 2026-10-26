@@ -26,6 +26,8 @@ interface PinjamanItem {
   persenBunga?: number;
   statusPinjaman: string;
   progress: number;
+  sisaHari: number;
+  mode: "lunas" | "pelunasan" | "cicilan";
 }
 
 export default function Pinjaman({
@@ -41,6 +43,7 @@ export default function Pinjaman({
     sudahDibayar: 0,
     kewajibanPerbulan: 0,
   });
+  const [peringatan, setPeringatan] = useState<string | null>(null);
 
   const [daftarPinjaman, setDaftarPinjaman] = useState<PinjamanItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +82,22 @@ export default function Pinjaman({
     });
   };
 
+  const formatNumberInput = (value: string) => {
+    let cleanValue = value.replace(/[^0-9,]/g, "");
+    
+    const parts = cleanValue.split(",");
+    if (parts.length > 2) {
+      cleanValue = parts[0] + "," + parts.slice(1).join("");
+    }
+
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? "," + parts[1] : "";
+
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return integerPart + decimalPart;
+  };
+
   const fetchPinjamanData = async () => {
     setLoading(true);
     setError("");
@@ -103,6 +122,7 @@ export default function Pinjaman({
 
       setDaftarPinjaman(result.data || []);
       setRingkasan(result.summary || { belumDibayar: 0, sudahDibayar: 0, kewajibanPerbulan: 0 });
+      setPeringatan(result.peringatan || null);
     } catch (err: unknown) {
       const errorObj = err as Error;
       setError(errorObj.message || "Terjadi kesalahan saat mengambil data pinjaman.");
@@ -117,7 +137,7 @@ export default function Pinjaman({
 
   const handleOpenBayarModal = (item: PinjamanItem) => {
     setSelectedPinjaman(item);
-    setNominalBayar(String(item.cicilanBulanan));
+    setNominalBayar(item.mode === "pelunasan" ? item.totalYangHarusDibayar.toLocaleString("id-ID") : item.cicilanBulanan.toLocaleString("id-ID"));
     setSumberDana("Tunai");
     setErrorBayar("");
   };
@@ -126,9 +146,24 @@ export default function Pinjaman({
     e.preventDefault();
     if (!selectedPinjaman) return;
 
-    const bayar = Number(nominalBayar);
+    const nominalBersih = nominalBayar.replace(/\./g, "").replace(/,/g, ".");
+    const bayar = Number(nominalBersih);
+
     if (!bayar || bayar <= 0) {
       setErrorBayar("Nominal bayar harus lebih dari 0.");
+      return;
+    }
+
+    if (selectedPinjaman.mode === "pelunasan" && bayar < selectedPinjaman.totalYangHarusDibayar) {
+      setErrorBayar(`Wajib melunasi seluruh tagihan sebesar ${formatRupiah(selectedPinjaman.totalYangHarusDibayar)}.`);
+      return;
+    }
+
+    const minimumCicilan = Math.ceil(selectedPinjaman.totalPinjaman / selectedPinjaman.tenorCicilan);
+    const sisaTagihan = selectedPinjaman.totalYangHarusDibayar;
+
+    if (selectedPinjaman.mode !== "pelunasan" && bayar < minimumCicilan && bayar < sisaTagihan) {
+      setErrorBayar(`Cicilan minimal Rp${minimumCicilan.toLocaleString("id-ID")}. Silakan masukkan nominal yang lebih besar.`);
       return;
     }
 
@@ -137,20 +172,21 @@ export default function Pinjaman({
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/pinjaman/${selectedPinjaman._id}/bayar`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            nominalBayar: bayar,
-            Sumber_Dana: sumberDana,
-          }),
-        }
-      );
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/pinjaman/${selectedPinjaman._id}/bayar`;
+      
+      const payload = {
+        nominalBayar: bayar,
+        Sumber_Dana: sumberDana,
+      };
+
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
 
       const teksResponse = await res.text();
 
@@ -159,14 +195,16 @@ export default function Pinjaman({
           const parsed = JSON.parse(teksResponse);
           throw new Error(parsed.message || "Gagal memproses pembayaran cicilan.");
         } catch {
-          throw new Error("Terjadi kesalahan pada server backend.");
+          throw new Error(`Terjadi kesalahan pada server (HTTP ${res.status}).`);
         }
       }
 
       setSelectedPinjaman(null);
       setNominalBayar("");
       setSumberDana("Tunai");
-      await fetchPinjamanData();
+      
+      await fetchPinjamanData(); 
+      
     } catch (err: unknown) {
       const errorObj = err as Error;
       setErrorBayar(errorObj.message || "Terjadi kesalahan saat memproses pembayaran.");
@@ -187,6 +225,15 @@ export default function Pinjaman({
         />
 
         <NavCatatan />
+
+        {peringatan && (
+          <div className="bg-[#FFB700]/10 border border-[#FFB700]/30 rounded-2xl p-4 flex flex-row items-start gap-3">
+            <span className="material-icons text-[#FFB700] text-xl shrink-0 mt-0.5">warning</span>
+            <p className="text-xs md:text-sm text-[#FFB700] font-medium leading-relaxed">
+              {peringatan}
+            </p>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-100 rounded-3xl p-5 md:p-6 shadow-sm flex flex-col gap-5">
           <div className="flex flex-row items-center justify-between mb-1">
@@ -267,7 +314,7 @@ export default function Pinjaman({
             </div>
             <button
               type="button"
-              onClick={onSwitchToAddPinjaman}
+              onClick={() => router.push("/?mode=semuapinjaman")}
               className="text-[#6C63F2] text-xs md:text-sm font-semibold hover:underline cursor-pointer"
             >
               Lihat Semua
@@ -315,17 +362,23 @@ export default function Pinjaman({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#F3F2FE] text-[#6C63F2] font-bold">
+                <span className="inline-flex items-center justify-center text-[10px] px-2.5 py-1 rounded-full bg-[#F3F2FE] text-[#6C63F2] font-bold">
                   {item.jenisPinjaman || "Bunga Tetap"}
                 </span>
                 {item.persenBunga !== undefined && item.persenBunga > 0 && (
-                  <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#FFB700]/10 text-[#FFB700] font-bold">
+                  <span className="inline-flex items-center justify-center text-[10px] px-2.5 py-1 rounded-full bg-[#FFB700]/10 text-[#FFB700] font-bold">
                     Bunga {item.persenBunga}% /bulan
                   </span>
                 )}
                 {item.statusPinjaman === "Lunas" && (
-                  <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#05DF72]/10 text-[#05DF72] font-bold">
+                  <span className="inline-flex items-center justify-center text-[10px] px-2.5 py-1 rounded-full bg-[#05DF72]/10 text-[#05DF72] font-bold">
                     Lunas
+                  </span>
+                )}
+                {item.mode === "pelunasan" && item.statusPinjaman !== "Lunas" && (
+                  <span className="inline-flex items-center justify-center text-[10px] px-2.5 py-1 rounded-full bg-[#E74C3C]/10 text-[#E74C3C] font-bold">
+                    <span className="material-icons text-[12px] leading-none">warning</span>
+                    Jatuh Tempo H-1
                   </span>
                 )}
               </div>
@@ -365,7 +418,7 @@ export default function Pinjaman({
                     className="px-5 py-2.5 rounded-full bg-[#6C63F2] text-white hover:bg-[#574CE8] text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#6C63F2]/20"
                   >
                     <span className="material-icons text-sm leading-none">payments</span>
-                    <span>Bayar Cicilan</span>
+                    <span>{item.mode === "pelunasan" ? "Lunasi Sekarang" : "Bayar Cicilan"}</span>
                   </button>
                 </div>
               )}
@@ -406,25 +459,35 @@ export default function Pinjaman({
                 </label>
                 <input
                   type="text"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   value={nominalBayar}
-                  onChange={(e) => setNominalBayar(e.target.value.replace(/[^0-9]/g, ""))}
+                  onChange={(e) => setNominalBayar(formatNumberInput(e.target.value))}
                   placeholder="Masukkan nominal bayar"
                   className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm px-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
                   required
                 />
 
                 <div className="flex flex-wrap gap-1.5 mt-2">
+                  {selectedPinjaman.mode !== "pelunasan" ? (
+                    <button
+                      type="button"
+                      onClick={() => setNominalBayar(selectedPinjaman.cicilanBulanan.toLocaleString("id-ID"))}
+                      className="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-[10px] text-gray-600 font-medium transition-colors"
+                    >
+                      1x Cicilan ({formatRupiah(selectedPinjaman.cicilanBulanan)})
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setNominalBayar(selectedPinjaman.totalYangHarusDibayar.toLocaleString("id-ID"))}
+                      className="px-3 py-1.5 rounded-full bg-[#E74C3C]/10 text-[#E74C3C] text-[10px] font-bold transition-colors"
+                    >
+                      Lunasi Sekarang ({formatRupiah(selectedPinjaman.totalYangHarusDibayar)})
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setNominalBayar(String(selectedPinjaman.cicilanBulanan))}
-                    className="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-[10px] text-gray-600 font-medium transition-colors"
-                  >
-                    1x Cicilan ({formatRupiah(selectedPinjaman.cicilanBulanan)})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNominalBayar(String(selectedPinjaman.totalYangHarusDibayar))}
+                    onClick={() => setNominalBayar(selectedPinjaman.totalYangHarusDibayar.toLocaleString("id-ID"))}
                     className="px-3 py-1.5 rounded-full bg-[#6C63F2]/10 border border-[#6C63F2]/20 hover:bg-[#6C63F2]/20 text-[10px] text-[#6C63F2] font-bold transition-colors"
                   >
                     Pelunasan ({formatRupiah(selectedPinjaman.totalYangHarusDibayar)})

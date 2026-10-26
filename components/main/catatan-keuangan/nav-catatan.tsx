@@ -14,7 +14,7 @@ export default function NavCatatan() {
     { name: "Kelola Pinjaman", icon: "account_balance_wallet", mode: "kelolapinjaman", href: "/?mode=kelolapinjaman" },
     { name: "Budgeting", icon: "pie_chart", mode: "budgeting", href: "/?mode=budgeting" },
     { name: "Target Nabung", icon: "savings", mode: "targetnabung", href: "/?mode=targetnabung" },
-    { name: "Dompet", icon: "wallet", mode: "dompet", href: "/?mode=dompet" },
+    // { name: "Dompet", icon: "wallet", mode: "dompet", href: "/?mode=dompet" },
   ];
 
   return (

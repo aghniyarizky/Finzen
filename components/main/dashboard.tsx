@@ -29,9 +29,8 @@ interface TransactionItem {
 interface PinjamanDashboard {
   _id: string;
   namaPlatform: string;
-  totalPinjaman: number;
-  totalYangHarusDibayar: number;
-  progress: number;
+  jatuhTempo: string;
+  cicilanBulanan: number;
   statusPinjaman: string;
 }
 
@@ -86,7 +85,6 @@ export default function Dashboard() {
   });
   const [recentTransactions, setRecentTransactions] = useState<TransactionItem[]>([]);
   const [listPinjaman, setListPinjaman] = useState<PinjamanDashboard[]>([]);
-  const [totalPinjamanAktif, setTotalPinjamanAktif] = useState(0);
   const [financialHealth, setFinancialHealth] = useState<FinancialHealthSummary | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -104,55 +102,73 @@ export default function Dashboard() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
 
-        const resProfile = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, { method: "GET", headers });
-        if (resProfile.ok) {
-          const dataProfile = await resProfile.json();
-          localStorage.setItem("user", JSON.stringify(dataProfile));
-          setUserName(dataProfile.username || dataProfile.nama || dataProfile.name || "");
-        }
-
-        const resKeuangan = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan`, { method: "GET", headers });
-        if (resKeuangan.ok) {
-          const resData = await resKeuangan.json();
-          setSummary({
-            saldo: resData.summary?.saldo ?? 0,
-            totalPemasukan: resData.summary?.totalPemasukan ?? 0,
-            totalPengeluaran: resData.summary?.totalPengeluaran ?? 0,
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
+            method: "GET",
+            headers,
           });
 
-          const mapped: TransactionItem[] = (resData.data || []).slice(0, 5).map((item: any) => ({
-            id: item._id,
-            title: item.Catatan_Transaksi,
-            category: item.kategori,
-            date: formatTanggal(item.tanggal),
-            amount: item.tipe === "pemasukan" ? item.nominal : -item.nominal,
-            type: item.tipe,
-            icon: getIconForCategory(item.kategori),
-            iconColor: item.tipe === "pemasukan" ? "text-[#05DF72]" : "text-[#E74C3C]",
-          }));
-          setRecentTransactions(mapped);
+          if (res.ok) {
+            const result = await res.json();
+            const data = result.data;
+
+            setUserName(data.nama || "Pengguna");
+            localStorage.setItem("user", JSON.stringify({ username: data.nama }));
+
+            setSummary({
+              saldo: data.ringkasan?.saldo ?? 0,
+              totalPemasukan: data.ringkasan?.totalPemasukan ?? 0,
+              totalPengeluaran: data.ringkasan?.totalPengeluaran ?? 0,
+            });
+
+            const mappedTransactions: TransactionItem[] = (data.transaksiTerakhir || []).map((item: any) => ({
+              id: item._id,
+              title: item.catatan,
+              category: item.kategori,
+              date: formatTanggal(item.tanggal),
+              amount: item.tipe === "pemasukan" ? item.nominal : -item.nominal,
+              type: item.tipe,
+              icon: getIconForCategory(item.kategori),
+              iconColor: item.tipe === "pemasukan" ? "text-[#05DF72]" : "text-[#E74C3C]",
+            }));
+            setRecentTransactions(mappedTransactions);
+
+            if (data.financialHealth) {
+              setFinancialHealth({
+                skorTotal: data.financialHealth.skorTotal,
+                grade: data.financialHealth.grade,
+                updatedAt: data.financialHealth.updatedAt,
+              });
+            }
+          } else {
+            console.warn("Gagal ambil dashboard utama, tapi lanjut ambil pinjaman...");
+          }
+        } catch (err) {
+          console.error("Error fetch dashboard:", err);
         }
 
-        const resPinjaman = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/pinjaman`, { method: "GET", headers });
-        if (resPinjaman.ok) {
-          const resPinjamanData = await resPinjaman.json();
-          const items: PinjamanDashboard[] = resPinjamanData.data || [];
-          const aktif = items.filter((p) => p.statusPinjaman !== "Lunas");
-          setListPinjaman(aktif);
-          setTotalPinjamanAktif(aktif.length);
-        }
-        
-        const resFinancialHealth = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/financial-health`, { method: "GET", headers });
-        if (resFinancialHealth.ok) {
-          const resFHData = await resFinancialHealth.json();
-          if (resFHData.data) {
-            setFinancialHealth({
-              skorTotal: resFHData.data.skorTotal,
-              grade: resFHData.data.grade,
-              updatedAt: resFHData.data.updatedAt,
-            });
+        try {
+          const resPinjaman = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/pinjaman`, {
+            method: "GET",
+            headers,
+          });
+
+          if (resPinjaman.ok) {
+            const pinjamanResult = await resPinjaman.json();
+            const items: PinjamanDashboard[] = pinjamanResult.data || [];
+            
+            const aktif = items.filter((p) => p.statusPinjaman !== "Lunas");
+            
+            const sorted = aktif.sort(
+              (a, b) => new Date(a.jatuhTempo).getTime() - new Date(b.jatuhTempo).getTime()
+            );
+
+            setListPinjaman(sorted);
           }
+        } catch (err) {
+          console.error("Error fetch pinjaman:", err);
         }
+
       } catch (err: unknown) {
         const errorObj = err as Error;
         setError(errorObj.message || "Gagal memuat data dashboard.");
@@ -310,17 +326,25 @@ export default function Dashboard() {
             {loading ? (
               <div className="text-center text-sm text-gray-400 py-4">Memuat pinjaman...</div>
             ) : listPinjaman.length > 0 ? (
-              listPinjaman.map((pj) => (
-                <div key={pj._id} className="bg-gray-50 rounded-2xl p-4 flex flex-row justify-between items-center">
-                  <div>
-                    <div className="text-sm font-bold text-gray-800 mb-0.5">{pj.namaPlatform}</div>
-                    <div className="text-xs text-gray-400">Jatuh tempo 20 Agu 2026</div>
+              listPinjaman.slice(0, 2).map((pj) => {
+                const tanggalJatuhTempo = new Date(pj.jatuhTempo).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                });
+
+                return (
+                  <div key={pj._id} className="bg-gray-50 rounded-2xl p-4 flex flex-row justify-between items-center">
+                    <div>
+                      <div className="text-sm font-bold text-gray-800 mb-0.5">{pj.namaPlatform}</div>
+                      <div className="text-xs text-gray-400">Jatuh tempo {tanggalJatuhTempo}</div>
+                    </div>
+                    <div className="text-sm font-bold text-[#E74C3C]">
+                      {formatRupiah(pj.cicilanBulanan)}
+                    </div>
                   </div>
-                  <div className="text-sm font-bold text-[#E74C3C]">
-                    {formatRupiah(pj.totalYangHarusDibayar)}
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-center text-sm text-gray-400 py-4">Tidak ada cicilan aktif.</div>
             )}

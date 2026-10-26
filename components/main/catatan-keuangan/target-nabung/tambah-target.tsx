@@ -41,15 +41,34 @@ export default function TambahTargetNabung({
     { id: "graduation", label: "🎓" },
   ];
 
+  const formatNumberInput = (value: string) => {
+    let cleanValue = value.replace(/[^0-9,]/g, "");
+    
+    const parts = cleanValue.split(",");
+    if (parts.length > 2) {
+      cleanValue = parts[0] + "," + parts.slice(1).join("");
+    }
+
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? "," + parts[1] : "";
+
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return integerPart + decimalPart;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const nominalBersih = nominal.replace(/\./g, "").replace(/,/g, ".");
+    const nominalAngka = Number(nominalBersih);
 
     if (!namaTarget.trim()) {
       setError("Silakan isi Nama Target.");
       return;
     }
-    if (!nominal || Number(nominal) <= 0) {
+    if (!nominalBersih || isNaN(nominalAngka) || nominalAngka <= 0) {
       setError("Target Nominal harus lebih dari 0.");
       return;
     }
@@ -69,8 +88,8 @@ export default function TambahTargetNabung({
 
       const payload = {
         icon: selectedIcon,
-        namaTarget,
-        targetNominal: Number(nominal),
+        namaTarget: namaTarget.trim(),
+        targetNominal: nominalAngka,
         deadlineTarget,
       };
 
@@ -173,9 +192,10 @@ export default function TambahTargetNabung({
               <div className="relative flex items-center">
                 <span className="absolute left-4 text-sm font-semibold text-gray-500">Rp</span>
                 <input 
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={nominal}
-                  onChange={(e) => setNominal(e.target.value)}
+                  onChange={(e) => setNominal(formatNumberInput(e.target.value))}
                   className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm pl-12 pr-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
                   placeholder="Contoh: 5.000.000"
                 />

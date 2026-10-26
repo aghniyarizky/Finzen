@@ -169,12 +169,12 @@ export default function CariAman() {
 
       <div className="lg:max-w-5xl lg:mx-auto lg:w-full flex flex-col gap-5">
         <Header
-          title="Teman Pintar"
+          title="Cari Aman"
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onProfileClick={() => router.push("/?mode=profile-edit")}
         />
 
-        <div className="flex flex-row gap-2">
+        {/* <div className="flex flex-row gap-2">
           <button
             type="button"
             onClick={() => router.push("/?mode=temanhemat")}
@@ -194,7 +194,7 @@ export default function CariAman() {
             </span>
             Cari Aman
           </button>
-        </div>
+        </div> */}
 
         {error && (
           <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-100 rounded-2xl">

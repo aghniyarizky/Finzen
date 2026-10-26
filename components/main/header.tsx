@@ -90,7 +90,7 @@ export default function Header({ title, onOpenSidebar, onProfileClick }: HeaderP
         </div>
 
         <div className="flex flex-row items-center gap-3">
-          <button
+          {/* <button
             type="button"
             onClick={() => setIsNotifOpen(true)}
             className="flex items-center justify-center text-gray-800 hover:text-white transition-colors cursor-pointer"
@@ -98,7 +98,7 @@ export default function Header({ title, onOpenSidebar, onProfileClick }: HeaderP
             <span className="material-icons text-xl select-none">
               notifications
             </span>
-          </button>
+          </button> */}
 
           <button
             type="button"

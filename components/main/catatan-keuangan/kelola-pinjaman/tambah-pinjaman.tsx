@@ -195,7 +195,8 @@ export default function TambahPinjaman({ onSwitchToKelolaPinjaman }: TambahPinja
                       namaPlatformSelect === "" ? "text-gray-400" : "text-gray-800"
                     }`}
                   >
-                    <option value="" disabled hidden></option>
+                    <option value="" disabled hidden>Pilih Nama Platform</option>
+                    
                     {platformOptions.map((item) => (
                       <option key={item.id} value={item.id} className="bg-white text-gray-800">
                         {item.name}
@@ -228,7 +229,7 @@ export default function TambahPinjaman({ onSwitchToKelolaPinjaman }: TambahPinja
                       jenisPinjaman === "" ? "text-gray-400" : "text-gray-800"
                     }`}
                   >
-                    <option value="" disabled hidden></option>
+                    <option value="" disabled hidden>Pilih Jenis Pinjaman</option>
                     {jenisOptions.map((item) => (
                       <option key={item.id} value={item.id} className="bg-white text-gray-800">
                         {item.name}
@@ -269,7 +270,7 @@ export default function TambahPinjaman({ onSwitchToKelolaPinjaman }: TambahPinja
                       tenorCicilan === "" ? "text-gray-400" : "text-gray-800"
                     }`}
                   >
-                    <option value="" disabled hidden></option>
+                    <option value="" disabled hidden>Pilih Tenor Cicilan</option>
                     {tenorOptions.map((item) => (
                       <option key={item.id} value={item.id} className="bg-white text-gray-800">
                         {item.name}
@@ -328,7 +329,7 @@ export default function TambahPinjaman({ onSwitchToKelolaPinjaman }: TambahPinja
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="text-xs text-gray-500 font-semibold mb-1.5 block">Status Pinjaman</label>
                 <div className="relative">
                   <select 
@@ -346,7 +347,7 @@ export default function TambahPinjaman({ onSwitchToKelolaPinjaman }: TambahPinja
                     expand_more
                   </span>
                 </div>
-              </div>
+              </div> */}
 
             </div>
           </div>

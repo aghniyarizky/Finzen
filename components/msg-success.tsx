@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "material-icons/iconfont/material-icons.css";
 
 interface ToastSuccessProps {
@@ -14,24 +14,47 @@ interface ToastSuccessProps {
 export default function ToastSuccess({
   isVisible,
   onClose,
-  title = "Data berhasil dihapus.",
-  message = "Data yang dipilih telah dihapus dari daftar. Perubahan ini sudah tersimpan.",
-  autoCloseDuration = 3000,
+  title = "Data berhasil disimpan",
+  message = "Data berhasil disimpan. Kamu bisa melanjutkan ke langkah berikutnya.",
+  autoCloseDuration = 2000, // Default 2 detik
 }: ToastSuccessProps) {
+  const [show, setShow] = useState(false);
+
   useEffect(() => {
-    if (isVisible && autoCloseDuration > 0) {
-      const timer = setTimeout(() => {
-        onClose();
+    let timerHide: NodeJS.Timeout;
+    let timerRemove: NodeJS.Timeout;
+
+    if (isVisible) {
+      setShow(true);
+
+      timerHide = setTimeout(() => {
+        setShow(false);
+        timerRemove = setTimeout(() => {
+          onClose();
+        }, 400);
       }, autoCloseDuration);
-      return () => clearTimeout(timer);
     }
+
+    return () => {
+      clearTimeout(timerHide);
+      clearTimeout(timerRemove);
+    };
   }, [isVisible, autoCloseDuration, onClose]);
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-white border border-gray-100 rounded-2xl p-4 shadow-xl flex flex-row items-start gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
-      <div className="w-10 h-10 rounded-xl bg-[#1B8A44] shrink-0" />
+    <div
+      className={`fixed top-4 left-1/2 z-50 w-[90%] max-w-md bg-white border border-gray-100 rounded-2xl p-4 shadow-xl flex flex-row items-start gap-4 transition-all duration-400 ease-in-out ${
+        show
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 -translate-y-8 pointer-events-none"
+      }`}
+      style={{ transform: "translateX(-50%)" }}
+    >
+      <div className="w-10 h-10 rounded-xl bg-[#1B8A44] flex items-center justify-center shrink-0">
+        <span className="material-icons text-white text-2xl">check_circle</span>
+      </div>
       
       <div className="flex-1 pt-0.5">
         <h4 className="text-sm font-bold text-[#1B8A44] mb-1">{title}</h4>

@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import 'material-icons/iconfont/material-icons.css';
 import Sidebar from '../../../sidebar';
-
 import { useRouter } from "next/navigation";
 import Header from "../../../header";
+
+import ConfirmDeleteModal from '../../../../confirm-delete'; 
+import ToastSuccess from '../../../../msg-success';
+import ToastError from '../../../../msg-error';
+import { useToast } from '../../../../use-toast';
 
 interface EditTargetNabungProps {
   targetId?: string | null;
@@ -16,9 +20,15 @@ export default function EditTargetNabung({ targetId, onSwitchToTargetNabung }: E
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [selectedIcon, setSelectedIcon] = useState("💻");
-  const [namaTarget, setNamaTarget] = useState("Nabung Laptop Baru");
-  const [nominal, setNominal] = useState("3000000");
-  const [deadlineTarget, setDeadlineTarget] = useState("2026-10-15");
+  const [namaTarget, setNamaTarget] = useState("");
+  const [nominal, setNominal] = useState("");
+  const [deadlineTarget, setDeadlineTarget] = useState("");
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const toast = useToast();
   const router = useRouter();
 
   const iconsList = [
@@ -36,15 +46,174 @@ export default function EditTargetNabung({ targetId, onSwitchToTargetNabung }: E
     { id: "graduation", label: "🎓" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const formatNumberInput = (value: string) => {
+    let cleanValue = value.replace(/[^0-9,]/g, "");
+    
+    const parts = cleanValue.split(",");
+    if (parts.length > 2) {
+      cleanValue = parts[0] + "," + parts.slice(1).join("");
+    }
+
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? "," + parts[1] : "";
+
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return integerPart + decimalPart;
+  };
+
+  useEffect(() => {
+    const fetchDetailTarget = async () => {
+      if (!targetId) return;
+      setLoading(true);
+      setError("");
+
+      try {
+        const token = localStorage.getItem("token");
+        
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/target-tabung`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
+
+        const textRes = await res.text();
+        let resData;
+        try {
+          resData = JSON.parse(textRes);
+        } catch {
+          throw new Error("Respon server bukan format JSON yang valid.");
+        }
+
+        if (!res.ok) {
+          throw new Error(resData.message || "Gagal memuat daftar target.");
+        }
+
+        const list = resData.data || [];
+        const item = list.find((p: any) => String(p._id) === String(targetId));
+
+        if (item) {
+          setSelectedIcon(item.icon || "🎯");
+          setNamaTarget(item.namaTarget || "");
+          setNominal(Number(item.targetNominal || 0).toLocaleString("id-ID"));
+          if (item.deadlineTarget) {
+            setDeadlineTarget(item.deadlineTarget.split("T")[0]);
+          }
+        } else {
+          throw new Error("Target tabungan tidak ditemukan.");
+        }
+      } catch (err: any) {
+        setError(err.message || "Terjadi kesalahan.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetailTarget();
+  }, [targetId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Update target ID:", targetId, {
-      selectedIcon,
-      namaTarget,
-      nominal,
-      deadlineTarget,
-    });
-    onSwitchToTargetNabung();
+    if (!targetId) return;
+    setLoading(true);
+    setError("");
+
+    const nominalBersih = nominal.replace(/\./g, "").replace(/,/g, ".");
+
+    try {
+      const token = localStorage.getItem("token");
+      
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/target-tabung/${targetId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            icon: selectedIcon,
+            namaTarget,
+            targetNominal: Number(nominalBersih),
+            deadlineTarget,
+          }),
+        }
+      );
+
+      const textRes = await res.text();
+      let resData;
+      try {
+        resData = JSON.parse(textRes);
+      } catch {
+        throw new Error("Respon server bukan format JSON yang valid.");
+      }
+
+      if (!res.ok) {
+        throw new Error(resData.message || "Gagal memperbarui target.");
+      }
+
+      toast.showToast("Data berhasil disimpan", "Perubahan target tabungan telah berhasil disimpan.", "success");
+      
+      setTimeout(() => {
+        onSwitchToTargetNabung();
+      }, 2500);
+
+    } catch (err: any) {
+      toast.showToast("Gagal Menyimpan", err.message || "Terjadi kesalahan saat menyimpan.", "error");
+      setLoading(false);
+    }
+  };
+
+  const confirmDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!targetId) return;
+    setShowDeleteModal(false);
+    setLoading(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/target-tabung/${targetId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      );
+
+      const textRes = await res.text();
+      let resData;
+      try {
+        resData = JSON.parse(textRes);
+      } catch {
+        throw new Error(`Server merespons bukan JSON.`);
+      }
+
+      if (!res.ok) {
+        throw new Error(resData.message || "Gagal menghapus target.");
+      }
+
+      toast.showToast("Data berhasil dihapus", "Data target tabungan telah dihapus dari daftar.", "success");
+      
+      setTimeout(() => {
+        onSwitchToTargetNabung();
+      }, 2500);
+
+    } catch (err: any) {
+      toast.showToast("Gagal Menghapus", err.message || "Terjadi kesalahan saat menghapus.", "error");
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,6 +240,12 @@ export default function EditTargetNabung({ targetId, onSwitchToTargetNabung }: E
           </button>
           <div className="text-xl font-bold text-gray-900">Edit Target Nabung</div>
         </div>
+
+        {error && (
+          <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-100 rounded-2xl">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="w-full">
           <div className="bg-white border border-gray-100 p-5 md:p-6 rounded-3xl shadow-sm mb-6 flex flex-col gap-6">
@@ -116,9 +291,10 @@ export default function EditTargetNabung({ targetId, onSwitchToTargetNabung }: E
               <div className="relative flex items-center">
                 <span className="absolute left-4 text-sm font-semibold text-gray-500">Rp</span>
                 <input 
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={nominal}
-                  onChange={(e) => setNominal(e.target.value)}
+                  onChange={(e) => setNominal(formatNumberInput(e.target.value))}
                   className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm pl-12 pr-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
                 />
               </div>
@@ -139,25 +315,48 @@ export default function EditTargetNabung({ targetId, onSwitchToTargetNabung }: E
           <div className="flex flex-col gap-3">
             <button 
               type="submit"
-              className="w-full bg-[#6C63F2] text-sm text-white font-bold py-3.5 rounded-2xl hover:bg-[#574CE8] transition-colors cursor-pointer shadow-md shadow-[#6C63F2]/20"
+              disabled={loading}
+              className="w-full bg-[#6C63F2] text-sm text-white font-bold py-3.5 rounded-2xl hover:bg-[#574CE8] transition-colors cursor-pointer shadow-md shadow-[#6C63F2]/20 disabled:opacity-50"
             >
-              Simpan
+              {loading ? "Menyimpan..." : "Simpan"}
             </button>
 
             <button 
               type="button"
-              onClick={() => {
-                if(confirm("Apakah Anda yakin ingin menghapus target ini?")) {
-                  onSwitchToTargetNabung();
-                }
-              }}
-              className="w-full bg-[#E74C3C] text-sm text-white font-bold py-3.5 rounded-2xl hover:bg-[#d63b2b] transition-colors cursor-pointer shadow-md shadow-[#E74C3C]/20"
+              onClick={confirmDelete}
+              disabled={loading}
+              className="w-full bg-red-50 text-red-500 text-sm font-bold py-3.5 rounded-2xl hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
             >
-              Hapus Transaksi
+              Hapus Target
             </button>
           </div>
         </form>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        loading={loading}
+        title="Hapus Target Nabung?"
+        description="Apakah kamu yakin ingin menghapus target tabungan ini? Tindakan ini tidak dapat dibatalkan."
+      />
+
+      {toast.type === "success" ? (
+        <ToastSuccess
+          isVisible={toast.isVisible}
+          onClose={toast.hideToast}
+          title={toast.title}
+          message={toast.message}
+        />
+      ) : (
+        <ToastError
+          isVisible={toast.isVisible}
+          onClose={toast.hideToast}
+          title={toast.title}
+          message={toast.message}
+        />
+      )}
     </div>
   );
 }

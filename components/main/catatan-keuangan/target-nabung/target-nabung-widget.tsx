@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import 'material-icons/iconfont/material-icons.css';
+import { useRouter } from "next/navigation";
 
 interface TargetNabungProps {
   onSwitchToAddTarget?: () => void;
@@ -28,12 +29,13 @@ export default function TargetNabungWidget({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // State untuk Modal Setor
   const [selectedTarget, setSelectedTarget] = useState<TargetTabungBE | null>(null);
   const [nominalSetor, setNominalSetor] = useState("");
   const [sumberDana, setSumberDana] = useState("Tunai");
   const [loadingSetor, setLoadingSetor] = useState(false);
   const [errorSetor, setErrorSetor] = useState("");
+
+  const router = useRouter();
 
   const sumberDanaOptions = [
     "Tunai", "Gopay", "DANA", "ShopeePay", "Bank Mandiri", "BSI", "BRI", "BTN", "BSA", "OVO", "Lainnya"
@@ -119,19 +121,17 @@ export default function TargetNabungWidget({
     }
   };
 
-  // Mengambil maksimal 2 target teratas untuk ditampilkan di dashboard agar tidak terlalu panjang
   const displayTargets = listTarget.slice(0, 2);
 
   return (
     <div className="w-full bg-white border border-gray-100 rounded-[24px] p-5 shadow-sm flex flex-col gap-4">
       
-      {/* HEADER WIDGET (Judul & Tombol Lihat Semua) */}
       <div className="flex flex-row items-center justify-between">
         <div className="text-base font-bold text-gray-900">Target Nabung</div>
         <button
           type="button"
-          onClick={onSwitchToAddTarget}
-          className="text-[#6C63F2] text-xs md:text-sm font-semibold hover:underline cursor-pointer"
+          onClick={() => router.push("/?mode=kelolapinjaman")}
+          className="text-[#6C63F2] text-xs md:text-sm font-semibold hover:underline"
         >
           Lihat Semua
         </button>
@@ -151,7 +151,6 @@ export default function TargetNabungWidget({
         </div>
       )}
 
-      {/* LIST TARGET */}
       {!loading && !error && displayTargets.map((item) => (
         <div 
           key={item._id}
@@ -184,7 +183,6 @@ export default function TargetNabungWidget({
         </div>
       ))}
 
-      {/* MODAL SETOR (Tetap di dalam komponen agar bisa dipakai langsung) */}
       {selectedTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl">

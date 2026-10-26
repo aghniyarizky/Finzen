@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import 'material-icons/iconfont/material-icons.css';
 import { useRouter } from "next/navigation";
 import Sidebar from '../../../sidebar';
-
 import Header from "../../../header";
+
+import ConfirmDeleteModal from '../../../../confirm-delete';
+import ToastSuccess from '../../../../msg-success';
+import ToastError from '../../../../msg-error';
+import { useToast } from '../../../../use-toast';
 
 interface EditBudgetingProps {
   budgetingId: string | number | null;
@@ -19,6 +23,12 @@ export default function EditBudgeting({ budgetingId, onSwitchToBudgeting }: Edit
   const [batasBulan, setBatasBulan] = useState("");
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalSelesai, setTanggalSelesai] = useState("");
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
+  const toast = useToast();
   const router = useRouter();
 
   const jenisOptions = [
@@ -30,23 +40,6 @@ export default function EditBudgeting({ budgetingId, onSwitchToBudgeting }: Edit
     { id: "Hiburan", name: "Hiburan / Game" },
     { id: "Tagihan", name: "Tagihan / Listrik / Air" },
     { id: "Lainnya", name: "Lainnya" },
-  ];
-
-  const listBudgeting = [
-    {
-      id: 1,
-      kategori: "Uang Saku",
-      batas: "3.000.000",
-      mulai: "2026-08-01",
-      selesai: "2026-08-31",
-    },
-    {
-      id: 2,
-      kategori: "Pendidikan",
-      batas: "1.500.000",
-      mulai: "2026-08-01",
-      selesai: "2026-08-31",
-    },
   ];
 
   const formatNumberInput = (value: string) => {
@@ -66,51 +59,159 @@ export default function EditBudgeting({ budgetingId, onSwitchToBudgeting }: Edit
   };
 
   useEffect(() => {
-    if (budgetingId) {
-      const foundItem = listBudgeting.find(
-        (item) => String(item.id) === String(budgetingId)
-      );
+    const fetchDetailBudget = async () => {
+      if (!budgetingId) return;
+      setLoading(true);
+      setError("");
 
-      if (foundItem) {
-        setKategoriBudget(foundItem.kategori);
-        setBatasBulan(foundItem.batas);
-        setTanggalMulai(foundItem.mulai);
-        setTanggalSelesai(foundItem.selesai);
+      try {
+        const token = localStorage.getItem("token");
+        
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/budgeting`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
+
+        const textRes = await res.text();
+        let resData;
+        try {
+          resData = JSON.parse(textRes);
+        } catch {
+          throw new Error("Respon server bukan format JSON yang valid.");
+        }
+
+        if (!res.ok) {
+          throw new Error(resData.message || "Gagal memuat daftar budget.");
+        }
+
+        const list = resData.data || [];
+        const item = list.find((p: any) => String(p._id) === String(budgetingId));
+
+        if (item) {
+          setKategoriBudget(item.Kategori_Budget || "");
+          setBatasBulan(Number(item.Batas_PerBulan || 0).toLocaleString("id-ID"));
+          if (item.Tanggal_Mulai) setTanggalMulai(item.Tanggal_Mulai.split("T")[0]);
+          if (item.Tanggal_Selesai) setTanggalSelesai(item.Tanggal_Selesai.split("T")[0]);
+        } else {
+          throw new Error("Budget tidak ditemukan dalam daftar.");
+        }
+      } catch (err: any) {
+        setError(err.message || "Terjadi kesalahan saat memuat data.");
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchDetailBudget();
   }, [budgetingId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!budgetingId) return;
+    setLoading(true);
+    setError("");
+    
     const nominalBersih = batasBulan.replace(/\./g, "").replace(/,/g, ".");
     
-    console.log("Update Budgeting:", {
-      budgetingId,
-      kategoriBudget,
-      batasBulan: Number(nominalBersih),
-      tanggalMulai,
-      tanggalSelesai,
-    });
-    
-    onSwitchToBudgeting();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/budgeting/${budgetingId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            Kategori_Budget: kategoriBudget,
+            Batas_PerBulan: Number(nominalBersih),
+            Tanggal_Mulai: tanggalMulai,
+            Tanggal_Selesai: tanggalSelesai,
+          }),
+        }
+      );
+
+      const textRes = await res.text();
+      let resData;
+      try {
+        resData = JSON.parse(textRes);
+      } catch {
+        throw new Error("Respon server bukan format JSON yang valid.");
+      }
+
+      if (!res.ok) {
+        throw new Error(resData.message || "Gagal memperbarui budget.");
+      }
+
+      toast.showToast("Data berhasil disimpan", "Perubahan budget telah berhasil disimpan.", "success");
+      
+      setTimeout(() => {
+        onSwitchToBudgeting();
+      }, 2500);
+
+    } catch (err: any) {
+      toast.showToast("Gagal Menyimpan", err.message || "Terjadi kesalahan saat menyimpan.", "error");
+      setLoading(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (confirm("Apakah Anda yakin ingin menghapus budget ini?")) {
-      console.log("Menghapus Budget ID:", budgetingId);
+  const confirmDelete = () => {
+    setShowDeleteModal(true);
+  };
 
-      if (onSwitchToBudgeting) {
-        onSwitchToBudgeting();
+  const handleDelete = async () => {
+    if (!budgetingId) return;
+    setShowDeleteModal(false);
+    setLoading(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/catatan-keuangan/budgeting/${budgetingId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      );
+
+      const textRes = await res.text();
+      let resData;
+      try {
+        resData = JSON.parse(textRes);
+      } catch {
+        throw new Error(`Server merespons bukan JSON.`);
       }
+
+      if (!res.ok) {
+        throw new Error(resData.message || "Gagal menghapus budget.");
+      }
+
+      toast.showToast("Data berhasil dihapus", "Data budget telah dihapus dari daftar.", "success");
+      
+      setTimeout(() => {
+        onSwitchToBudgeting();
+      }, 2500);
+
+    } catch (err: any) {
+      toast.showToast("Gagal Menghapus", err.message || "Terjadi kesalahan saat menghapus.", "error");
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full h-full p-4 md:p-6 py-8 flex flex-col bg-[#F8F9FC] text-gray-800 overflow-y-auto overflow-x-hidden relative font-sans">
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-      />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <div className="lg:max-w-5xl lg:mx-auto lg:w-full flex flex-col gap-5">
         <Header
@@ -129,6 +230,12 @@ export default function EditBudgeting({ budgetingId, onSwitchToBudgeting }: Edit
           </button>
           <div className="text-xl font-bold text-gray-900">Edit Budget</div>
         </div>
+
+        {error && (
+          <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-100 rounded-2xl">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="w-full">
           <div className="bg-white border border-gray-100 p-5 md:p-6 rounded-3xl shadow-sm mb-6 flex flex-col gap-4">
@@ -198,21 +305,48 @@ export default function EditBudgeting({ budgetingId, onSwitchToBudgeting }: Edit
           <div className="flex flex-col gap-3">
             <button
               type="submit"
-              className="w-full bg-[#6C63F2] text-sm text-white font-bold py-3.5 rounded-2xl hover:bg-[#574CE8] transition-colors cursor-pointer shadow-md shadow-[#6C63F2]/20"
+              disabled={loading}
+              className="w-full bg-[#6C63F2] text-sm text-white font-bold py-3.5 rounded-2xl hover:bg-[#574CE8] transition-colors cursor-pointer shadow-md shadow-[#6C63F2]/20 disabled:opacity-50"
             >
-              Simpan Perubahan
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
 
             <button
               type="button"
-              onClick={handleDelete}
-              className="w-full bg-red-50 text-red-500 text-sm font-bold py-3.5 rounded-2xl hover:bg-red-100 transition-colors cursor-pointer"
+              onClick={confirmDelete}
+              disabled={loading}
+              className="w-full bg-red-50 text-red-500 text-sm font-bold py-3.5 rounded-2xl hover:bg-red-100 transition-colors cursor-pointer disabled:opacity-50"
             >
               Hapus Budget
             </button>
           </div>
         </form>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        loading={loading}
+        title="Hapus Budget?"
+        description="Apakah kamu yakin ingin menghapus data budget ini? Tindakan ini tidak dapat dibatalkan."
+      />
+
+      {toast.type === "success" ? (
+        <ToastSuccess
+          isVisible={toast.isVisible}
+          onClose={toast.hideToast}
+          title={toast.title}
+          message={toast.message}
+        />
+      ) : (
+        <ToastError
+          isVisible={toast.isVisible}
+          onClose={toast.hideToast}
+          title={toast.title}
+          message={toast.message}
+        />
+      )}
     </div>
   );
 }

@@ -88,7 +88,7 @@ export default function Transaksi({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const datesPerPage = 3;
+  const itemsPerPage = 10; // <--- Maksimal 10 per halaman
 
   const router = useRouter();
 
@@ -199,7 +199,15 @@ export default function Transaksi({
     return true;
   });
 
-  const groupedTransactions = filteredTransactions.reduce(
+  // --- LOGIKA PAGINATION BARU (MAKS 10) ---
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTransactions = filteredTransactions.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const groupedTransactions = currentTransactions.reduce(
     (acc, item) => {
       if (!acc[item.date]) {
         acc[item.date] = [];
@@ -209,15 +217,7 @@ export default function Transaksi({
     },
     {} as Record<string, TransactionItem[]>,
   );
-
-  const groupedDates = Object.keys(groupedTransactions);
-
-  const totalPages = Math.ceil(groupedDates.length / datesPerPage) || 1;
-  const startIndex = (currentPage - 1) * datesPerPage;
-  const paginatedDates = groupedDates.slice(
-    startIndex,
-    startIndex + datesPerPage,
-  );
+  // ----------------------------------------
 
   const handleFilterChange = (type: "semua" | "pemasukan" | "pengeluaran") => {
     setFilterType(type);
@@ -349,8 +349,8 @@ export default function Transaksi({
               <div className="py-8 text-center text-sm text-gray-400">
                 Memuat data transaksi...
               </div>
-            ) : paginatedDates.length > 0 ? (
-              paginatedDates.map((dateKey) => {
+            ) : Object.keys(groupedTransactions).length > 0 ? (
+              Object.keys(groupedTransactions).map((dateKey) => {
                 const items = groupedTransactions[dateKey];
 
                 return (
@@ -402,15 +402,6 @@ export default function Transaksi({
                                 title="Edit Transaksi"
                               >
                                 <span className="material-icons text-base">edit</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => setDeleteId(item.id)}
-                                className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-1.5 rounded-full hover:bg-white"
-                                title="Hapus Transaksi"
-                              >
-                                <span className="material-icons text-base">delete</span>
                               </button>
                             </div>
                           </div>
@@ -483,41 +474,6 @@ export default function Transaksi({
           </div>
         </div>
       </div>
-
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-base font-bold text-gray-900">
-                Hapus Transaksi?
-              </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Apakah kamu yakin ingin menghapus catatan transaksi ini?
-                Tindakan ini tidak dapat dibatalkan.
-              </p>
-            </div>
-
-            <div className="flex flex-row items-center gap-3 mt-2">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => setDeleteId(null)}
-                className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleDeleteTransaksi}
-                className="w-1/2 py-2.5 rounded-xl bg-[#E74C3C] text-sm font-bold text-white hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                {isDeleting ? "Menghapus..." : "Hapus"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -174,42 +174,30 @@ export default function TargetNabung({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 mt-2">
-          <div className="text-lg font-bold text-gray-900 mb-1">
+        <div className="flex flex-row items-center justify-between mt-2">
+          <div className="text-lg font-bold text-gray-900">
             Target Saya ({listTarget.length})
           </div>
-
-          <div className="flex flex-row items-center gap-2 w-fit">
-            {onSwitchToAddTarget ? (
-              <button
-                type="button"
-                onClick={onSwitchToAddTarget}
-                className="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex flex-row items-center gap-2 bg-[#6C63F2] text-white hover:bg-[#574CE8] shadow-md shadow-[#6C63F2]/20 shrink-0"
-              >
-                <span className="material-icons select-none leading-none text-white text-base">add</span>
-                <span>Tambah</span>
-              </button>
-            ) : (
-              <Link
-                href="/?mode=tambahtarget"
-                className="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex flex-row items-center gap-2 bg-[#6C63F2] text-white hover:bg-[#574CE8] shadow-md shadow-[#6C63F2]/20 shrink-0"
-              >
-                <span className="material-icons select-none leading-none text-white text-base">add</span>
-                <span>Tambah</span>
-              </Link>
-            )}
-
+          {onSwitchToAddTarget ? (
             <button
               type="button"
-              onClick={() => router.push("/?mode=zenai")}
-              className="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex flex-row items-center gap-2 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm shrink-0"
+              onClick={onSwitchToAddTarget}
+              className="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex flex-row items-center gap-2 bg-[#6C63F2] text-white hover:bg-[#574CE8] shadow-md shadow-[#6C63F2]/20 shrink-0"
             >
-              <span className="material-icons select-none leading-none text-[#6C63F2] text-base">auto_awesome</span>
-              <span>Tanya ZenAI</span>
+              <span className="material-icons select-none leading-none text-white text-base">add</span>
+              <span>Tambah</span>
             </button>
-          </div>
+          ) : (
+            <Link
+              href="/?mode=tambahtarget"
+              className="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex flex-row items-center gap-2 bg-[#6C63F2] text-white hover:bg-[#574CE8] shadow-md shadow-[#6C63F2]/20 shrink-0"
+            >
+              <span className="material-icons select-none leading-none text-white text-base">add</span>
+              <span>Tambah</span>
+            </Link>
+          )}
         </div>
-
+    
         {loading && (
           <div className="text-center py-8 text-gray-400 text-sm">
             Memuat data target tabung...

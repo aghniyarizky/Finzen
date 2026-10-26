@@ -14,6 +14,8 @@ import ScanStruk from "@/components/main/catatan-keuangan/transaksi/scan-struk";
 import TambahTransaksi from "@/components/main/catatan-keuangan/transaksi/tambah-transaksi";
 import Pinjaman from "@/components/main/catatan-keuangan/kelola-pinjaman/pinjaman";
 import TambahPinjaman from "@/components/main/catatan-keuangan/kelola-pinjaman/tambah-pinjaman";
+import SemuaPinjaman from "@/components/main/catatan-keuangan/kelola-pinjaman/semua-peminjaman";
+
 import KalkulatorBunga from "@/components/main/catatan-keuangan/kelola-pinjaman/kalkulator-bunga";
 import EditTransaksi from "@/components/main/catatan-keuangan/transaksi/[id]/page";
 import EditPinjaman from "@/components/main/catatan-keuangan/kelola-pinjaman/[id]/page";
@@ -46,6 +48,7 @@ type StepType =
   | "kelolapinjaman"
   | "tambahpinjaman"
   | "editpinjaman"
+  | "semuapinjaman"
   | "kalkulator"
   | "budgeting"
   | "tambahbudgeting"
@@ -54,7 +57,7 @@ type StepType =
   | "tambahtargetnabung"
   | "edittargetnabung"
   // | "beforeyouborrow"
-  | "dompet"
+  // | "dompet"
   | "tambahdompet"
   | "editdompet"
   | "cariaman"
@@ -93,6 +96,8 @@ function AuthContent() {
       return "tambahpinjaman";
     if (["editpinjaman", "edit-pinjaman", "detailpinjaman"].includes(rawStep))
       return "editpinjaman";
+    if (rawStep === "semuapinjaman") return "semuapinjaman";
+    
     if (rawStep === "kalkulator") return "kalkulator";
     // if (["beforeyouborrow", "before-you-borrow", "borrow"].includes(rawStep))
     //   return "beforeyouborrow";
@@ -112,9 +117,9 @@ function AuthContent() {
     if (["edittargetnabung", "edittarget"].includes(rawStep))
       return "edittargetnabung";
 
-    if (rawStep === "dompet") return "dompet";
-    if (rawStep === "tambahdompet") return "tambahdompet";
-    if (rawStep === "editdompet") return "editdompet";
+    // if (rawStep === "dompet") return "dompet";
+    // if (rawStep === "tambahdompet") return "tambahdompet";
+    // if (rawStep === "editdompet") return "editdompet";
 
     if (
       ["register", "otp", "profile", "condition", "login"].includes(rawStep)
@@ -258,6 +263,8 @@ function AuthContent() {
         />
       )}
 
+      {step === "semuapinjaman" && <SemuaPinjaman />}
+
       {step === "kalkulator" && <KalkulatorBunga />}
       {/* {step === "beforeyouborrow" && <BeforeYouBorrow />} */}
       {step === "cariaman" && <CariAman />}
@@ -304,7 +311,7 @@ function AuthContent() {
         />
       )}
 
-      {step === "dompet" && (
+      {/* {step === "dompet" && (
         <Dompet 
         />
       )}
@@ -320,7 +327,7 @@ function AuthContent() {
           dompetId={dompetId} 
           onSwitchToDompet={() => setStep("dompet")} 
         />
-      )}
+      )} */}
       {/* ------------------------------------------- */}
 
       {step === "profileedit" && (
