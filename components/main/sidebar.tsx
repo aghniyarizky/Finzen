@@ -389,6 +389,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         loading={isLoggingOut}
         title="Logout Akun?"
         description="Apakah kamu yakin ingin keluar dari akun ini? Kamu harus login kembali untuk mengakses data keuanganmu."
+        confirmText="Logout"
+        cancelText="Batal"
       />
 
       <ToastSuccess

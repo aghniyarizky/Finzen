@@ -9,6 +9,8 @@ interface ConfirmDeleteModalProps {
   title?: string;
   description?: string;
   loading?: boolean;
+  confirmText?: string;
+  cancelText?: string; 
 }
 
 export default function ConfirmDeleteModal({
@@ -18,6 +20,8 @@ export default function ConfirmDeleteModal({
   title = "Hapus Data?",
   description = "Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.",
   loading = false,
+  confirmText = "Hapus",
+  cancelText = "Batal"
 }: ConfirmDeleteModalProps) {
   const [render, setRender] = useState(false);
   const [animate, setAnimate] = useState(false);
@@ -69,7 +73,7 @@ export default function ConfirmDeleteModal({
             onClick={onClose}
             className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
           >
-            Batal
+            {cancelText}
           </button>
           <button
             type="button"
@@ -77,7 +81,7 @@ export default function ConfirmDeleteModal({
             onClick={onConfirm}
             className="w-1/2 py-2.5 rounded-xl bg-[#E74C3C] text-sm font-bold text-white hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50"
           >
-            {loading ? "Menghapus..." : "Hapus"}
+            {loading ? "Menghapus..." : confirmText}
           </button>
         </div>
       </div>

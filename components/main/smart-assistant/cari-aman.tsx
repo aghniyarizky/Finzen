@@ -53,37 +53,11 @@ export default function CariAman() {
   const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => {
-    const fetchLatest = async () => {
-      setLoadingInitial(true);
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cariAman/output`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-
-        const teksResponse = await response.text();
-
-        if (!response.ok) {
-          throw new Error("Gagal mengambil data sebelumnya");
-        }
-
-        const resData = JSON.parse(teksResponse);
-
-        if (resData.data) {
-          setHasilAnalisis(mapApiDataToHasil(resData.data));
-        }
-      } catch (err) {
-        setHasilAnalisis(null);
-      } finally {
-        setLoadingInitial(false);
-      }
-    };
-
-    fetchLatest();
+    setPesan("");
+    setHasilAnalisis(null);
+    setError("");
+    setShowDetail(false);
+    setLoadingInitial(false);
   }, []);
 
   const handleAnalisis = async (e: React.FormEvent) => {

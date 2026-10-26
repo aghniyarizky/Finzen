@@ -17,16 +17,23 @@ interface EditPinjamanProps {
 }
 
 const platformOptions = [
-  { id: "Shopee PayLater", name: "Shopee PayLater" },
-  { id: "EasyCash", name: "EasyCash" },
-  { id: "Gopay Later", name: "Gopay Later" },
+  { id: "ShopeePayLater", name: "ShopeePayLater" },
+  { id: "GoPayLater", name: "GoPayLater" },
   { id: "Kredivo", name: "Kredivo" },
+  { id: "Akulaku", name: "Akulaku" },
+  { id: "Easycash", name: "Easycash" },
+  { id: "Kredit Pintar", name: "Kredit Pintar" },
+  { id: "Lainnya", name: "Lainnya (Ketik Manual)" },
 ];
 
 const jenisOptions = [
-  { id: "Bunga Tetap", name: "Bunga Tetap" },
-  { id: "Bunga Anuitas", name: "Bunga Anuitas" },
-  { id: "Bunga Efektif", name: "Bunga Efektif" },
+  { id: "Pinjaman Online", name: "Pinjaman Online" },
+  { id: "Paylater", name: "Paylater" },
+  { id: "KTA (Kredit Tanpa Agunan)", name: "KTA (Kredit Tanpa Agunan)" },
+  { id: "Kredit Kendaraan", name: "Kredit Kendaraan" },
+  { id: "Kredit Rumah (KPR)", name: "Kredit Rumah (KPR)" },
+  { id: "Kartu Kredit", name: "Kartu Kredit" },
+  { id: "Lainnya", name: "Lainnya" },
 ];
 
 const tenorOptions = [
@@ -39,6 +46,7 @@ const tenorOptions = [
 
 export default function EditPinjaman({ pinjamanId, onSwitchToTransaction }: EditPinjamanProps) {
   const [namaPlatform, setNamaPlatform] = useState("");
+  const [namaPlatformManual, setNamaPlatformManual] = useState("");
   const [jenisPinjaman, setJenisPinjaman] = useState("");
   const [totalPinjaman, setTotalPinjaman] = useState("");
   const [tenorCicilan, setTenorCicilan] = useState("");
@@ -103,7 +111,16 @@ export default function EditPinjaman({ pinjamanId, onSwitchToTransaction }: Edit
         const item = list.find((p: any) => String(p._id) === String(pinjamanId));
 
         if (item) {
-          setNamaPlatform(item.namaPlatform || "");
+          const isPlatformExist = platformOptions.some(p => p.id === item.namaPlatform);
+          
+          if (isPlatformExist) {
+            setNamaPlatform(item.namaPlatform || "");
+            setNamaPlatformManual("");
+          } else {
+            setNamaPlatform("Lainnya");
+            setNamaPlatformManual(item.namaPlatform || "");
+          }
+
           setJenisPinjaman(item.jenisPinjaman || "");
           setTotalPinjaman(Number(item.totalPinjaman || 0).toLocaleString("id-ID"));
           setTenorCicilan(String(item.tenorCicilan || ""));
@@ -136,6 +153,8 @@ export default function EditPinjaman({ pinjamanId, onSwitchToTransaction }: Edit
     const totalBersih = totalPinjaman.replace(/\./g, "").replace(/,/g, ".");
     const cicilanBersih = cicilanPerBulan.replace(/\./g, "").replace(/,/g, ".");
     const bayarBersih = totalBayar.replace(/\./g, "").replace(/,/g, ".");
+    
+    const finalNamaPlatform = namaPlatform === "Lainnya" ? namaPlatformManual : namaPlatform;
 
     try {
       const token = localStorage.getItem("token");
@@ -148,7 +167,7 @@ export default function EditPinjaman({ pinjamanId, onSwitchToTransaction }: Edit
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
-            namaPlatform,
+            namaPlatform: finalNamaPlatform,
             jenisPinjaman,
             totalPinjaman: Number(totalBersih),
             tenorCicilan: Number(tenorCicilan),
@@ -294,6 +313,16 @@ export default function EditPinjaman({ pinjamanId, onSwitchToTransaction }: Edit
                   expand_more
                 </span>
               </div>
+
+              {namaPlatform === "Lainnya" && (
+                <input 
+                  type="text"
+                  value={namaPlatformManual}
+                  onChange={(e) => setNamaPlatformManual(e.target.value)}
+                  className="mt-3 bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm px-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
+                  placeholder="Ketikkan nama platform..."
+                />
+              )}
             </div>
 
             <div>
@@ -436,6 +465,8 @@ export default function EditPinjaman({ pinjamanId, onSwitchToTransaction }: Edit
         loading={loading}
         title="Hapus Pinjaman?"
         description="Apakah kamu yakin ingin menghapus data pinjaman ini? Tindakan ini tidak dapat dibatalkan."
+        confirmText="Hapus"
+        cancelText="Batal"
       />
 
       {toast.type === "success" ? (
