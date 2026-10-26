@@ -20,8 +20,8 @@ const urbanist = Urbanist({
 });
 
 export const metadata: Metadata = {
-  title: "FinZen",
-  description: "FinZen App",
+  title: "Saku GenZ",
+  description: "Saku GenZ App",
   icons: {
     icon: "/finzen-logo.png",
   },

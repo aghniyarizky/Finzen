@@ -36,7 +36,7 @@ export default function LandingPage({
               <span className="material-icons text-white">account_balance_wallet</span>
             </div>
             <span className="text-xl font-bold tracking-tight bg-gray-700 bg-clip-text text-transparent">
-              FinZen
+              Saku Gen-Z
             </span>
           </div>
 
@@ -347,7 +347,7 @@ export default function LandingPage({
           </h2>
 
           <p className="mt-3 text-sm sm:text-base text-gray-500 font-semibold">
-            Dengan FinZen, kamu bisa lebih paham kondisi keuanganmu, lebih siap menghadapi kebutuhan mendadak, dan lebih bijak sebelum mengambil keputusan finansial.
+            Dengan Saku Gen-Z, kamu bisa lebih paham kondisi keuanganmu, lebih siap menghadapi kebutuhan mendadak, dan lebih bijak sebelum mengambil keputusan finansial.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -370,7 +370,7 @@ export default function LandingPage({
       <footer id="tentang" className="py-8 px-6 bg-[#F8F9FC] text-center text-xs text-gray-500">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-gray-600 text-xs md:text-sm">FinZen</span>
+            <span className="font-bold text-gray-600 text-xs md:text-sm">Saku Gen-Z</span>
             <span className="font-bold text-gray-600 text-xs md:text-sm">© 2026</span>
           </div>
           <div className="flex items-center gap-6 text-gray-600 font-bold text-xs md:text-sm">

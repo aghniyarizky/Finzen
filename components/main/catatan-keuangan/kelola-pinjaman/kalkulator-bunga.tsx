@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import 'material-icons/iconfont/material-icons.css';
 import Sidebar from '../../sidebar';
 import { useRouter } from "next/navigation";
-
 import Header from "../../header";
 
 interface HasilKalkulasi {
@@ -45,6 +44,22 @@ export default function KalkulatorBunga() {
     }).format(val);
   };
 
+  const formatNumberInput = (value: string) => {
+    let cleanValue = value.replace(/[^0-9,]/g, "");
+    
+    const parts = cleanValue.split(",");
+    if (parts.length > 2) {
+      cleanValue = parts[0] + "," + parts.slice(1).join("");
+    }
+
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? "," + parts[1] : "";
+
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return integerPart + decimalPart;
+  };
+
   const renderAnalisis = (text: string) => {
     const parts = text.split("**");
     return parts.map((part, i) =>
@@ -59,41 +74,14 @@ export default function KalkulatorBunga() {
     return "";
   };
 
-  const fetchLatestSimulasi = async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const token = getAuthToken();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/kalkulator-bunga/output`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      const resData = await response.json();
-      if (!response.ok) throw new Error(resData.message || "Gagal mengambil data simulasi.");
-
-      if (resData.data) {
-        setHasilKalkulasi(resData.data);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLatestSimulasi();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    // Bersihkan format titik dan koma sebelum dikirim ke API
+    const jumlahBersih = jumlahPinjaman.replace(/\./g, "").replace(/,/g, ".");
+    const dendaBersih = dendaPerHari.replace(/\./g, "").replace(/,/g, ".");
 
     try {
       const token = getAuthToken();
@@ -104,10 +92,10 @@ export default function KalkulatorBunga() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          jumlahPinjaman,
+          jumlahPinjaman: jumlahBersih,
           bungaPerBulan,
           tenorCicilan,
-          dendaPerHari,
+          dendaPerHari: dendaBersih,
           deadlineTarget,
         }),
       });
@@ -200,9 +188,10 @@ export default function KalkulatorBunga() {
             <div className="relative flex items-center">
               <span className="absolute left-4 text-sm font-semibold text-gray-500">Rp</span>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={jumlahPinjaman}
-                onChange={(e) => setJumlahPinjaman(e.target.value)}
+                onChange={(e) => setJumlahPinjaman(formatNumberInput(e.target.value))}
                 className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm pl-12 pr-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
                 placeholder="Contoh: 5.000.000"
                 required
@@ -237,7 +226,7 @@ export default function KalkulatorBunga() {
                 }`}
                 required
               >
-                <option value="" disabled hidden></option>
+                <option value="" disabled hidden>Pilih Tenor</option>
                 <option value="1">1 Bulan</option>
                 <option value="3">3 Bulan</option>
                 <option value="6">6 Bulan</option>
@@ -255,9 +244,10 @@ export default function KalkulatorBunga() {
             <div className="relative flex items-center">
               <span className="absolute left-4 text-sm font-semibold text-gray-500">Rp</span>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={dendaPerHari}
-                onChange={(e) => setDendaPerHari(e.target.value)}
+                onChange={(e) => setDendaPerHari(formatNumberInput(e.target.value))}
                 className="bg-gray-50 border border-gray-200 rounded-2xl w-full text-sm pl-12 pr-4 py-2.5 text-gray-800 focus:outline-none focus:border-[#6C63F2] focus:bg-white transition-colors placeholder:text-gray-400"
                 placeholder="Contoh: 15.000"
               />

@@ -126,7 +126,7 @@ return (
             <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-[#2EC4B6]/20 bg-[#6C63F2]">
               <span className="material-icons text-wh text-xl">account_balance_wallet</span>
             </div>
-            <span className="text-gray-600 font-extrabold text-lg tracking-tight">FinZen</span>
+            <span className="text-gray-600 font-extrabold text-lg tracking-tight">Saku Gen-Z</span>
           </div>
 
           <h1 className="text-4xl font-extrabold leading-tight text-gray-600 bg-clip-text mb-4">

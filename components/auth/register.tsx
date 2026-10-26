@@ -109,7 +109,7 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
             <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-[#2EC4B6]/20 bg-[#6C63F2]">
               <span className="material-icons text-wh text-xl">account_balance_wallet</span>
             </div>
-            <span className="text-gray-600 font-extrabold text-lg tracking-tight">FinZen</span>
+            <span className="text-gray-600 font-extrabold text-lg tracking-tight">Saku Gen-Z</span>
           </div>
 
           <h1 className="text-4xl font-extrabold leading-tight text-gray-600 bg-clip-text mb-4">
@@ -153,11 +153,11 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
               </div>
             </div>
           <h2 className="text-[#6C63F2] text-4xl font-extrabold tracking-tight text-center leading-snug">
-            Selamat Datang di <br/> FINZEN
+            Selamat Datang di <br/> Saku Gen-Z
           </h2>
 
           <p className="text-sm mt-2 text-gray-600 font-medium text-center leading-snug">
-            Buat akun FinZen dan nikmati kemudahan mencatat serta memantau finansialmu.
+            Buat akun Saku Gen-Z dan nikmati kemudahan mencatat serta memantau finansialmu.
           </p>
 
           <div className="p-4">
@@ -199,12 +199,12 @@ export default function RegisterComponent({ onSwitchToLogin, onSwitchLanding, on
             </div>
 
             {error && (
-              <div className="p-2.5 mb-3 text-xs text-red-700 bg-red-700/20 border border-red-700 rounded-xl backdrop-blur-sm">
+              <div className="p-2.5 mb-3 text-xs text-red-600 bg-red-200 border border-red-600 rounded-xl backdrop-blur-sm">
                 {error}
               </div>
             )}
             {success && (
-              <div className="p-2.5 mb-3 text-xs text-emerald-700 bg-emerald-700/20 border border-emerald-700 rounded-xl backdrop-blur-sm">
+              <div className="p-2.5 mb-3 text-xs text-emerald-600 bg-emerald-200 border border-emerald-600 rounded-xl backdrop-blur-sm">
                 Registrasi berhasil! Mengalihkan ke verifikasi OTP...
               </div>
             )}

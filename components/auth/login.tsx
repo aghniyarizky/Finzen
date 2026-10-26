@@ -107,7 +107,7 @@ export default function LoginPage({ onSwitchToRegister, onSwitchLanding, onLogin
             <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-[#2EC4B6]/20 bg-[#6C63F2]">
               <span className="material-icons text-wh text-xl">account_balance_wallet</span>
             </div>
-            <span className="text-gray-600 font-extrabold text-lg tracking-tight">FinZen</span>
+            <span className="text-gray-600 font-extrabold text-lg tracking-tight">Saku Gen-Z</span>
           </div>
 
           <h1 className="text-4xl font-extrabold leading-tight text-gray-600 bg-clip-text mb-4">
@@ -156,7 +156,7 @@ export default function LoginPage({ onSwitchToRegister, onSwitchLanding, onLogin
             </h2>
 
             <p className="text-sm mt-3 text-gray-600 font-medium text-center leading-snug">
-              Masuk ke FinZen dan lihat perkembangan finansialmu <br /> dengan mudah.
+              Masuk ke Saku Gen-Z dan lihat perkembangan finansialmu <br /> dengan mudah.
             </p>
 
             <div className="p-4">
@@ -198,12 +198,12 @@ export default function LoginPage({ onSwitchToRegister, onSwitchLanding, onLogin
               </div>
 
               {error && (
-                <div className="p-3 mb-4 text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-xl backdrop-blur-sm">
+                <div className="p-3 mb-4 text-sm text-red-600 bg-red-200 border border-red-600 rounded-xl backdrop-blur-sm">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="p-3 mb-4 text-sm text-emerald-400 bg-emerald-950/40 border border-emerald-900 rounded-xl backdrop-blur-sm">
+                <div className="p-3 mb-4 text-sm text-emerald-600 bg-emerald-200 border border-emerald-600 rounded-xl backdrop-blur-sm">
                   Login berhasil! Mengalihkan ke dashboard...
                 </div>
               )}
