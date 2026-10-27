@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   title: "Saku GenZ",
   description: "Saku GenZ App",
   icons: {
-    icon: "/finzen-logo.png",
+    icon: "/Logo-saku-gen-z.png",
   },
 };
 

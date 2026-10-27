@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import 'material-icons/iconfont/material-icons.css';
+import Image from "next/image";
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -104,8 +105,14 @@ export default function LoginPage({ onSwitchToRegister, onSwitchLanding, onLogin
 
         <div className="relative z-10 max-w-md">
           <div className="flex items-center gap-2 mb-10">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-[#2EC4B6]/20 bg-[#6C63F2]">
-              <span className="material-icons text-wh text-xl">account_balance_wallet</span>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-[#2EC4B6]/20 bg-[#6C63F2]/10">
+              <Image
+                src="/Logo-saku-gen-z.png"
+                alt="Logo Saku GenZ"
+                width={20}
+                height={20}
+                className="object-contain"
+              />
             </div>
             <span className="text-gray-600 font-extrabold text-lg tracking-tight">Saku Gen-Z</span>
           </div>

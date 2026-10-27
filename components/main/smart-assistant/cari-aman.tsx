@@ -28,7 +28,7 @@ const getRiskCategoryInfo = (score: number) => {
   } else if (score <= 59) {
     return { label: "Skor Waspada", text: "text-[#FFB700]", bar: "bg-[#FFB700]" };
   } else {
-    return { label: "Skor Bahaya", text: "text-[#FFB700]", bar: "bg-[#FFB700]" };
+    return { label: "Skor Bahaya", text: "text-[#E74C3C]", bar: "bg-[#E74C3C]" };
   }
 };
 

@@ -32,8 +32,14 @@ export default function LandingPage({
           
           {/* Logo Brand */}
           <div className="flex items-center gap-3">
-            <div className="px-2 py-1.5 flex items-center justify-center bg-[#6C63F2] rounded-full">
-              <span className="material-icons text-white">account_balance_wallet</span>
+            <div className="flex items-center justify-center p-2 bg-[#E8E6FD] rounded-full shrink-0">
+              <Image
+                src="/Logo-saku-gen-z.png"
+                alt="Logo Saku GenZ"
+                width={20}
+                height={20}
+                className="object-contain"
+              />
             </div>
             <span className="text-xl font-bold tracking-tight bg-gray-700 bg-clip-text text-transparent">
               Saku Gen-Z

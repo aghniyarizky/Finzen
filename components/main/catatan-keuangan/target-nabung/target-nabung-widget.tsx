@@ -130,7 +130,7 @@ export default function TargetNabungWidget({
         <div className="text-base font-bold text-gray-900">Target Nabung</div>
         <button
           type="button"
-          onClick={() => router.push("/?mode=kelolapinjaman")}
+          onClick={() => router.push("/?mode=targetnabung")}
           className="text-[#6C63F2] text-xs md:text-sm font-semibold hover:underline"
         >
           Lihat Semua
